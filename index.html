@@ -9,15 +9,14 @@
       font-family: Arial, sans-serif;
       margin: 40px;
     }
-    input[type="number"] {
-      padding: 5px;
-      margin: 10px 0;
-      width: 200px;
+    input, button {
+      padding: 6px;
+      margin: 6px 0;
       font-size: 1rem;
     }
     label {
       display: block;
-      margin-top: 15px;
+      margin-top: 10px;
       font-weight: bold;
     }
     .input-section {
@@ -39,7 +38,7 @@
 </head>
 <body>
   <h1>Pressure and Flow Calculator</h1>
-  <p><strong>Formula:</strong> y = 0.05x + 1E-13</p>
+  <p><strong>Default Formula:</strong> y = 0.05x + 1E-13</p>
 
   <div class="input-section">
     <label for="pressureInput">Input Pressure (kPa):</label>
@@ -47,6 +46,16 @@
 
     <label for="flowOutput">Calculated Flowrate (L/s):</label>
     <input type="text" id="flowOutput" readonly>
+  </div>
+
+  <div class="input-section">
+    <label for="formulaInput">Edit Formula (use 'x' as the variable):</label>
+    <input type="text" id="formulaInput" placeholder="e.g. 0.05*x + 1e-13">
+
+    <label for="passwordInput">Admin Password:</label>
+    <input type="text" id="passwordInput" placeholder="e.g. 1000001E">
+
+    <button onclick="attemptFormulaUpdate()">Apply Formula</button>
   </div>
 
   <canvas id="xyChart" width="800" height="400"></canvas>
@@ -59,62 +68,101 @@
   </table>
 
   <script>
-    function calculateFlow(x) {
-      return 0.05 * x + 1e-13;
+    let formula = "0.05 * x + 1e-13";
+
+    function evaluateFormula(x) {
+      try {
+        return eval(formula);
+      } catch {
+        return NaN;
+      }
     }
 
-    const dataPoints = [];
-
-    for (let x = 0; x <= 800; x += 10) {
-      const y = calculateFlow(x);
-      dataPoints.push({ x: x, y: y });
-
-      const row = document.createElement("tr");
-      row.innerHTML = `<td>${x.toFixed(2)}</td><td>${y.toFixed(2)}</td>`;
-      document.querySelector("#dataTable tbody").appendChild(row);
+    function isValidPassword(pwd) {
+      const match = pwd.match(/^([0-9]+)([A-Z])$/);
+      return match && parseInt(match[1]) > 1000000;
     }
 
-    new Chart(document.getElementById("xyChart"), {
-      type: 'scatter',
-      data: {
-        datasets: [{
-          label: 'Flow (y) vs Pressure (x)',
-          data: dataPoints,
-          showLine: true,
-          borderColor: 'green',
-          backgroundColor: 'lightgreen',
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Pressure (kPa)'
-            }
+    function attemptFormulaUpdate() {
+      const newFormula = document.getElementById("formulaInput").value;
+      const password = document.getElementById("passwordInput").value;
+
+      if (!isValidPassword(password)) {
+        alert("Invalid Entry or Password");
+        return;
+      }
+
+      try {
+        // Test if the formula runs for a value
+        const testX = 1;
+        const test = eval(newFormula.replace(/x/g, testX));
+        if (isNaN(test)) throw "Invalid";
+
+        formula = newFormula;
+        alert("Formula updated successfully.");
+        renderChartAndTable();
+      } catch {
+        alert("Invalid Entry or Password");
+      }
+    }
+
+    function renderChartAndTable() {
+      const dataPoints = [];
+      const tbody = document.querySelector("#dataTable tbody");
+      tbody.innerHTML = "";
+
+      for (let x = 0; x <= 800; x += 10) {
+        const y = evaluateFormula(x);
+        dataPoints.push({ x: x, y: y });
+
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${x.toFixed(2)}</td><td>${y.toFixed(2)}</td>`;
+        tbody.appendChild(row);
+      }
+
+      if (window.chart) {
+        window.chart.data.datasets[0].data = dataPoints;
+        window.chart.update();
+      } else {
+        window.chart = new Chart(document.getElementById("xyChart"), {
+          type: 'scatter',
+          data: {
+            datasets: [{
+              label: 'Flow (y) vs Pressure (x)',
+              data: dataPoints,
+              showLine: true,
+              borderColor: 'green',
+              backgroundColor: 'lightgreen',
+            }]
           },
-          y: {
-            title: {
-              display: true,
-              text: 'Flow (L/s)'
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                title: { display: true, text: 'Pressure (kPa)' }
+              },
+              y: {
+                title: { display: true, text: 'Flow (L/s)' }
+              }
             }
           }
-        }
+        });
       }
-    });
+    }
 
-    // Input interaction
     document.getElementById('pressureInput').addEventListener('input', function() {
       const pressure = parseFloat(this.value);
       const flowOutput = document.getElementById('flowOutput');
       if (!isNaN(pressure)) {
-        const flow = calculateFlow(pressure);
+        const flow = evaluateFormula(pressure);
         flowOutput.value = flow.toFixed(2);
       } else {
         flowOutput.value = '';
       }
     });
+
+    // Initial render
+    renderChartAndTable();
   </script>
 </body>
 </html>
