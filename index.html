@@ -9,6 +9,20 @@
       font-family: Arial, sans-serif;
       margin: 40px;
     }
+    input[type="number"] {
+      padding: 5px;
+      margin: 10px 0;
+      width: 200px;
+      font-size: 1rem;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    .input-section {
+      margin-bottom: 30px;
+    }
     table {
       border-collapse: collapse;
       margin-top: 20px;
@@ -21,17 +35,19 @@
     th {
       background-color: #e0f0ff;
     }
-    h1 {
-      margin-bottom: 0;
-    }
-    p {
-      margin-top: 0;
-    }
   </style>
 </head>
 <body>
   <h1>Pressure and Flow Calculator</h1>
   <p><strong>Formula:</strong> y = 0.05x + 1E-13</p>
+
+  <div class="input-section">
+    <label for="pressureInput">Input Pressure (kPa):</label>
+    <input type="number" id="pressureInput" step="0.01" placeholder="Enter pressure">
+
+    <label for="flowOutput">Calculated Flowrate (L/s):</label>
+    <input type="text" id="flowOutput" readonly>
+  </div>
 
   <canvas id="xyChart" width="800" height="400"></canvas>
 
@@ -85,6 +101,18 @@
             }
           }
         }
+      }
+    });
+
+    // Input interaction
+    document.getElementById('pressureInput').addEventListener('input', function() {
+      const pressure = parseFloat(this.value);
+      const flowOutput = document.getElementById('flowOutput');
+      if (!isNaN(pressure)) {
+        const flow = calculateFlow(pressure);
+        flowOutput.value = flow.toFixed(2);
+      } else {
+        flowOutput.value = '';
       }
     });
   </script>
