@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pressure vs. Flow Calculator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+    table {
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px 10px;
+      text-align: right;
+    }
+    th {
+      background-color: #e0f0ff;
+    }
+    h1 {
+      margin-bottom: 0;
+    }
+    p {
+      margin-top: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pressure and Flow Calculator</h1>
+  <p><strong>Formula:</strong> y = 0.05x + 1E-13</p>
+
+  <canvas id="xyChart" width="800" height="400"></canvas>
+
+  <table id="dataTable">
+    <thead>
+      <tr><th>x (Pressure, kPa)</th><th>y (Flow, L/s)</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    function calculateFlow(x) {
+      return 0.05 * x + 1e-13;
+    }
+
+    const dataPoints = [];
+
+    for (let x = 0; x <= 800; x += 10) {
+      const y = calculateFlow(x);
+      dataPoints.push({ x: x, y: y });
+
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${x.toFixed(2)}</td><td>${y.toFixed(2)}</td>`;
+      document.querySelector("#dataTable tbody").appendChild(row);
+    }
+
+    new Chart(document.getElementById("xyChart"), {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          label: 'Flow (y) vs Pressure (x)',
+          data: dataPoints,
+          showLine: true,
+          borderColor: 'green',
+          backgroundColor: 'lightgreen',
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Pressure (kPa)'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Flow (L/s)'
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
