@@ -56,6 +56,7 @@
     <input type="text" id="passwordInput" placeholder="e.g. 1000001E">
 
     <button onclick="attemptFormulaUpdate()">Apply Formula</button>
+    <button onclick="sendEmail()" style="margin-top: 20px; padding: 10px;"> 📩 Send Values via Email </button>
   </div>
 
   <canvas id="xyChart" width="800" height="400"></canvas>
@@ -93,7 +94,6 @@
       }
 
       try {
-        // Test if the formula runs for a value
         const testX = 1;
         const test = eval(newFormula.replace(/x/g, testX));
         if (isNaN(test)) throw "Invalid";
@@ -160,6 +160,35 @@
         flowOutput.value = '';
       }
     });
+
+    function sendEmail() {
+      const pressure = document.getElementById('pressureInput')?.value || '';
+      const flowrate = document.getElementById('flowOutput')?.value || '';
+      const formula = document.getElementById('formulaInput')?.value || '';
+
+      if (!pressure || !flowrate || !formula) {
+        alert("Please ensure all fields (Pressure, Flowrate, Formula) are filled in.");
+        return;
+      }
+
+      fetch('https://email-backend-2.onrender.com/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pressure: pressure.trim(),
+          flowrate: flowrate.trim(),
+          formula: formula.trim()
+        })
+      })
+      .then(res => res.text())
+      .then(msg => {
+        alert("✅ " + msg);
+      })
+      .catch(err => {
+        alert("❌ Failed to send email. Please try again.");
+        console.error(err);
+      });
+    }
 
     // Initial render
     renderChartAndTable();
